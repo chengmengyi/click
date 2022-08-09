@@ -8,15 +8,18 @@ import com.demo.click.helper.ReadConfigHelper
 import com.github.shadowsocks.Core
 import com.tencent.mmkv.MMKV
 
+lateinit var mClickApplication:ClickApplication
 class ClickApplication:Application() {
     override fun onCreate() {
         super.onCreate()
+        mClickApplication=this
         Core.init(this,HomePage::class)
         if (!packageName.equals(getCurrentProcessName(this))){
             return
         }
         MMKV.initialize(this)
         ReadConfigHelper.initLocalServerList()
+        ReadConfigHelper.readConfig()
         ActivityLifecycleListener.register(this)
     }
 

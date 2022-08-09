@@ -74,7 +74,16 @@ object ConnectServerManager:ShadowsocksConnection.Callback {
         this.currentSer=serverEnt
     }
 
-    private fun getFastServer() = ReadConfigHelper.getServerList().randomOrNull()
+    private fun getFastServer():ServerEnt?{
+        val serverList = ReadConfigHelper.getServerList()
+        if (!ReadConfigHelper.configCity.isNullOrEmpty()){
+            val filter = serverList.filter { ReadConfigHelper.configCity.contains(it.city_ent) }
+            if (!filter.isNullOrEmpty()){
+                return filter.randomOrNull()
+            }
+        }
+        return serverList.randomOrNull()
+    }
 
     override fun stateChanged(state: BaseService.State, profileName: String?, msg: String?) {
         updateStateChanged(state)

@@ -2,11 +2,19 @@ package com.demo.click.helper
 
 import android.content.Context
 import android.net.ConnectivityManager
+import android.util.Log
 import android.view.View
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
+import com.demo.click.BuildConfig
 import com.demo.click.R
 import com.demo.click.ent.ServerEnt
+
+fun printClick(string: String){
+    if (BuildConfig.DEBUG){
+        Log.e("qwer",string)
+    }
+}
 
 fun getServerName(serverEnt: ServerEnt)=
     if (serverEnt.isFast()) "Faster server"
