@@ -18,8 +18,8 @@ object LocalConfig {
          "click_pwd":"123456",
          "click_method":"chacha20-ietf-poly1305",
          "click_port":100,
-         "click_country":"Canada",
-         "click_city":"Vancouver",
+         "click_country":"Japan",
+         "click_city":"Tokyo",
          "click_host":"100.223.52.0"
       },
       {
@@ -37,7 +37,7 @@ object LocalConfig {
     "click_open": [
         {
             "click_source": "admob",
-            "click_id": "ca-app-pub-3940256099942544/1033173712x",
+            "click_id": "ca-app-pub-3940256099942544/3419835294x",
             "click_type": "chaping",
             "click_sort": 1
         },

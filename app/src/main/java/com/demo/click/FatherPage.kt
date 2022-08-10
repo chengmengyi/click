@@ -6,6 +6,7 @@ import androidx.appcompat.app.AppCompatActivity
 import com.gyf.immersionbar.ImmersionBar
 
 abstract class FatherPage(private val layoutId:Int):AppCompatActivity() {
+    var onResume=false
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         density()
@@ -32,4 +33,18 @@ abstract class FatherPage(private val layoutId:Int):AppCompatActivity() {
         metrics.densityDpi = dpi
     }
 
+    override fun onResume() {
+        super.onResume()
+        onResume=true
+    }
+
+    override fun onPause() {
+        super.onPause()
+        onResume=false
+    }
+
+    override fun onStop() {
+        super.onStop()
+        onResume=false
+    }
 }

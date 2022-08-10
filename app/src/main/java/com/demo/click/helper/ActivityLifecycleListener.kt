@@ -7,6 +7,8 @@ import android.os.Bundle
 import com.blankj.utilcode.util.ActivityUtils
 import com.demo.click.HomePage
 import com.demo.click.MainPage
+import com.demo.click.ad.LoadAdHelper
+import com.google.android.gms.ads.AdActivity
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -16,6 +18,8 @@ object ActivityLifecycleListener {
     var isFront=true
     private var job: Job?=null
     private var reload=false
+    var refreshHomeNativeAd=true
+    var refreshResultNativeAd=true
 
     fun register(application: Application){
         application.registerActivityLifecycleCallbacks(object : Application.ActivityLifecycleCallbacks{
@@ -29,6 +33,7 @@ object ActivityLifecycleListener {
                 if (num==1){
                     isFront=true
                     if (reload){
+                        refreshHomeNativeAd=true
                         if (ActivityUtils.isActivityExistsInStack(HomePage::class.java)){
                             activity.startActivity(Intent(activity, MainPage::class.java))
                         }
@@ -48,6 +53,9 @@ object ActivityLifecycleListener {
                     job= GlobalScope.launch {
                         delay(3000L)
                         reload=true
+                        LoadAdHelper.isShowingFullAd=false
+                        ActivityUtils.finishActivity(MainPage::class.java)
+                        ActivityUtils.finishActivity(AdActivity::class.java)
                     }
                 }
             }

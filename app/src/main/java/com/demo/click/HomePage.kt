@@ -4,7 +4,11 @@ import android.animation.ValueAnimator
 import android.content.Intent
 import android.net.VpnService
 import android.view.animation.LinearInterpolator
-import androidx.lifecycle.lifecycleScope
+import com.demo.click.ad.AdType
+import com.demo.click.ad.LoadAdHelper
+import com.demo.click.ad.ShowFullAdHelper
+import com.demo.click.ad.ShowNativeAdHelper
+import com.demo.click.callback.IConnectTimeCallback
 import com.demo.click.callback.IConnectedCallback
 import com.demo.click.helper.*
 import com.github.shadowsocks.bg.BaseService
@@ -13,13 +17,12 @@ import com.tencent.mmkv.MMKV
 import kotlinx.android.synthetic.main.layout_home.*
 import kotlinx.coroutines.*
 
-class HomePage:FatherPage(R.layout.layout_home), IConnectedCallback {
-    private var time=0L
+class HomePage:FatherPage(R.layout.layout_home), IConnectedCallback, IConnectTimeCallback {
     private var isConnecting=false
     private var havePermission = false
     private var connectAnimator: ValueAnimator?=null
-    private var countTimeJob:Job?=null
-
+    private val showConnectAdHelper by lazy { ShowFullAdHelper(this,AdType.CONNECT_AD) }
+    private val showHomeNativeAdHelper by lazy { ShowNativeAdHelper(this,AdType.HOME_AD) }
 
     private val launcher = registerForActivityResult(StartService()) {
         if (!it && havePermission) {
@@ -32,9 +35,9 @@ class HomePage:FatherPage(R.layout.layout_home), IConnectedCallback {
     }
 
     override fun init() {
-        time=MMKV.defaultMMKV().decodeLong("time")
         ConnectServerManager.onCreate(this)
         ConnectServerManager.setIConnectedCallback(this)
+        ConnectServerManager.setIConnectTimeCallback(this)
 
         setListener()
     }
@@ -52,12 +55,16 @@ class HomePage:FatherPage(R.layout.layout_home), IConnectedCallback {
             }
         }
         iv_set.setOnClickListener {
-            startActivity(Intent(this,SetPage::class.java))
+            if (!isConnecting){
+                startActivity(Intent(this,SetPage::class.java))
+            }
         }
     }
 
     private fun doLogic(isConnected:Boolean=ConnectServerManager.checkServerIsConnected()){
         isConnecting=true
+        LoadAdHelper.call(AdType.CONNECT_AD)
+        LoadAdHelper.call(AdType.RESULT_AD)
         if (isConnected){
             doDisconnectLogic()
         }else{
@@ -79,8 +86,7 @@ class HomePage:FatherPage(R.layout.layout_home), IConnectedCallback {
 
     private fun doConnectLogic(){
         ConnectServerManager.connectServer()
-        time=0L
-        saveTime()
+        ConnectServerManager.connectTime=0L
         updateUI(BaseService.State.Connecting)
         doConnectAnimatorLogic(true)
     }
@@ -94,8 +100,12 @@ class HomePage:FatherPage(R.layout.layout_home), IConnectedCallback {
                 progressBar.progress = if (connect) pro else 100-pro
                 val duration = (10 * (pro / 100.0F)).toInt()
                 if (duration in 2..9){
-                    if (ConnectServerManager.checkConnectOrDisSuccess(connect)){
-                        connectResult(connect)
+                    if (ConnectServerManager.checkConnectOrDisSuccess(connect)&&LoadAdHelper.checkHasAdDataByType(AdType.CONNECT_AD)){
+                        stopConnectAnimator()
+                        connectResult(connect,jumpResult = false)
+                        showConnectAdHelper.showFullAd{
+                            jumpResult(connect)
+                        }
                     }
                 }else if (duration>=10){
                     connectResult(connect)
@@ -105,7 +115,7 @@ class HomePage:FatherPage(R.layout.layout_home), IConnectedCallback {
         }
     }
 
-    private fun connectResult(connect:Boolean){
+    private fun connectResult(connect:Boolean,jumpResult:Boolean=true){
         if (ConnectServerManager.checkConnectOrDisSuccess(connect)){
             if (connect){
                 updateUI(BaseService.State.Connected)
@@ -113,10 +123,8 @@ class HomePage:FatherPage(R.layout.layout_home), IConnectedCallback {
                 updateUI(BaseService.State.Stopped)
                 updateCurrentSerInfo()
             }
-            if (ActivityLifecycleListener.isFront){
-                val intent = Intent(this, ResultPage::class.java)
-                intent.putExtra("connect",connect)
-                startActivity(intent)
+            if (jumpResult){
+                jumpResult(connect)
             }
             isConnecting=false
         }else{
@@ -126,11 +134,19 @@ class HomePage:FatherPage(R.layout.layout_home), IConnectedCallback {
         }
     }
 
+    private fun jumpResult(connect:Boolean){
+        if (ActivityLifecycleListener.isFront){
+            val intent = Intent(this, ResultPage::class.java)
+            intent.putExtra("connect",connect)
+            startActivity(intent)
+        }
+    }
+
     private fun updateUI(state:BaseService.State){
-        stopCountTime()
+        ConnectServerManager.stopCountTime()
         when(state){
             BaseService.State.Stopped,BaseService.State.Idle->updateStoppedUI()
-            BaseService.State.Connecting,BaseService.State.Stopping->updateConnectingUI()
+            BaseService.State.Connecting,BaseService.State.Stopping->updateConnectingUI(state)
             BaseService.State.Connected->updateConnectedUI()
         }
     }
@@ -143,8 +159,8 @@ class HomePage:FatherPage(R.layout.layout_home), IConnectedCallback {
         progressBar.progress = 0
     }
 
-    private fun updateConnectingUI(){
-        tv_connect.text="Connecting..."
+    private fun updateConnectingUI(state: BaseService.State) {
+        tv_connect.text=if (state==BaseService.State.Connecting)"Connecting..." else "Stopping..."
         showConnectAnimator(true)
     }
 
@@ -153,22 +169,7 @@ class HomePage:FatherPage(R.layout.layout_home), IConnectedCallback {
         showConnectAnimator(false)
         stopConnectAnimator()
         progressBar.progress = 100
-        startCountTime()
-    }
-
-    private fun startCountTime(){
-        countTimeJob=GlobalScope.launch(Dispatchers.Main){
-            while (true){
-                delay(1000L)
-                time++
-                tv_connect_time.text= transTime(time)
-            }
-        }
-    }
-
-    private fun stopCountTime(){
-        countTimeJob?.cancel()
-        countTimeJob=null
+        ConnectServerManager.startCountConnectTime()
     }
 
     private fun showConnectAnimator(show:Boolean){
@@ -185,10 +186,6 @@ class HomePage:FatherPage(R.layout.layout_home), IConnectedCallback {
     private fun stopConnectAnimator(){
         connectAnimator?.removeAllUpdateListeners()
         connectAnimator?.cancel()
-    }
-
-    private fun saveTime(){
-        MMKV.defaultMMKV().encode("time",time)
     }
 
     private fun checkHavePermission():Boolean{
@@ -220,11 +217,21 @@ class HomePage:FatherPage(R.layout.layout_home), IConnectedCallback {
         }
     }
 
+    override fun onResume() {
+        super.onResume()
+        if (ActivityLifecycleListener.refreshHomeNativeAd){
+            showHomeNativeAdHelper.getNativeAd()
+        }
+    }
+
     override fun onDestroy() {
         super.onDestroy()
-        saveTime()
-        stopCountTime()
         stopConnectAnimator()
         ConnectServerManager.onDestroy()
+        showHomeNativeAdHelper.onDestroy()
+    }
+
+    override fun connectTimeCallback(time: Long) {
+        tv_connect_time.text= transTime(time)
     }
 }

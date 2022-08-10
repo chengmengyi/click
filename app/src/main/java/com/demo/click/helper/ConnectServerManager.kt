@@ -2,6 +2,7 @@ package com.demo.click.helper
 
 import androidx.appcompat.app.AlertDialog
 import com.demo.click.FatherPage
+import com.demo.click.callback.IConnectTimeCallback
 import com.demo.click.callback.IConnectedCallback
 import com.demo.click.ent.ServerEnt
 import com.github.shadowsocks.Core
@@ -9,16 +10,23 @@ import com.github.shadowsocks.aidl.IShadowsocksService
 import com.github.shadowsocks.aidl.ShadowsocksConnection
 import com.github.shadowsocks.bg.BaseService
 import com.github.shadowsocks.preference.DataStore
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.launch
+import kotlinx.android.synthetic.main.layout_home.*
+import kotlinx.coroutines.*
 
 object ConnectServerManager:ShadowsocksConnection.Callback {
+    var connectTime=0L
+    private var countTimeJob: Job?=null
     private var context:FatherPage?=null
     var currentSer=ServerEnt.createFastServer()
     var lastSer=ServerEnt.createFastServer()
     private var state=BaseService.State.Idle
     private val sc=ShadowsocksConnection(true)
     private var iConnectedCallback:IConnectedCallback?=null
+    private var iConnectTimeCallback:IConnectTimeCallback?=null
+
+    fun setIConnectTimeCallback(iConnectTimeCallback: IConnectTimeCallback){
+        this.iConnectTimeCallback=iConnectTimeCallback
+    }
 
     fun setIConnectedCallback(iConnectedCallback:IConnectedCallback){
         this.iConnectedCallback=iConnectedCallback
@@ -104,6 +112,22 @@ object ConnectServerManager:ShadowsocksConnection.Callback {
         }
     }
 
+    fun startCountConnectTime(){
+        stopCountTime()
+        countTimeJob=GlobalScope.launch(Dispatchers.Main){
+            while (true){
+                delay(1000L)
+                connectTime++
+                iConnectTimeCallback?.connectTimeCallback(connectTime)
+            }
+        }
+    }
+
+    fun stopCountTime(){
+        countTimeJob?.cancel()
+        countTimeJob=null
+    }
+
     override fun onBinderDied() {
         context?.run {
             sc.disconnect(this)
@@ -113,5 +137,6 @@ object ConnectServerManager:ShadowsocksConnection.Callback {
     fun onDestroy(){
         onBinderDied()
         context=null
+        iConnectTimeCallback=null
     }
 }

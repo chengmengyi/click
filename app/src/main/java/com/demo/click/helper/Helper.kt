@@ -20,14 +20,12 @@ fun getServerName(serverEnt: ServerEnt)=
     if (serverEnt.isFast()) "Faster server"
     else "${serverEnt.country_ent} - ${serverEnt.city_ent}"
 
-fun getServerFlag(serverEnt: ServerEnt):Int{
-    var res=0
-    when(serverEnt.country_ent){
-        "Japan"->R.drawable.icon_flag_japan
-        "Singapore"->R.drawable.icon_flag_singapore
-        else->res= R.drawable.default_server_flag
+fun getServerFlag(serverEnt: ServerEnt): Int {
+    return when (serverEnt.country_ent) {
+        "Japan" -> R.drawable.icon_flag_japan
+        "Singapore" -> R.drawable.icon_flag_singapore
+        else -> R.drawable.default_server_flag
     }
-    return res
 }
 
 fun Context.toast(string: String){

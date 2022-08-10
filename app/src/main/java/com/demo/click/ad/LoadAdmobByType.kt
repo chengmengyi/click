@@ -13,15 +13,16 @@ import com.google.android.gms.ads.interstitial.InterstitialAdLoadCallback
 import com.google.android.gms.ads.nativead.NativeAdOptions
 
 open class LoadAdmobByType {
-    fun loadAdByType(type_0809:String,admobConfigEnt: AdmobConfigEnt,loadSuccess:(ad:LoadAdmobEnt)->Unit,loadFail:()->Unit){
-        when(type_0809){
+
+    fun loadAdByType(admobConfigEnt: AdmobConfigEnt,loadSuccess:(ad:LoadAdmobEnt)->Unit,loadFail:(msg:String)->Unit){
+        when(admobConfigEnt.type_0809){
             "kaiping"->loadOpenAd(admobConfigEnt,loadSuccess,loadFail)
             "chaping"->loadInterstitialAd(admobConfigEnt,loadSuccess,loadFail)
             "yuansheng"->loadNativeAd(admobConfigEnt,loadSuccess,loadFail)
         }
     }
 
-    private fun loadOpenAd(admobConfigEnt: AdmobConfigEnt,loadSuccess:(ad:LoadAdmobEnt)->Unit,loadFail:()->Unit){
+    private fun loadOpenAd(admobConfigEnt: AdmobConfigEnt,loadSuccess:(ad:LoadAdmobEnt)->Unit,loadFail:(msg:String)->Unit){
         AppOpenAd.load(
             mClickApplication,
             admobConfigEnt.id_0809,
@@ -35,20 +36,20 @@ open class LoadAdmobByType {
 
                 override fun onAdFailedToLoad(p0: LoadAdError) {
                     super.onAdFailedToLoad(p0)
-                    loadFail.invoke()
+                    loadFail.invoke(p0.message)
                 }
             }
         )
     }
 
-    private fun loadInterstitialAd(admobConfigEnt: AdmobConfigEnt,loadSuccess:(ad:LoadAdmobEnt)->Unit,loadFail:()->Unit){
+    private fun loadInterstitialAd(admobConfigEnt: AdmobConfigEnt,loadSuccess:(ad:LoadAdmobEnt)->Unit,loadFail:(msg:String)->Unit){
         InterstitialAd.load(
             mClickApplication,
             admobConfigEnt.id_0809,
             AdRequest.Builder().build(),
             object : InterstitialAdLoadCallback(){
                 override fun onAdFailedToLoad(p0: LoadAdError) {
-                    loadFail.invoke()
+                    loadFail.invoke(p0.message)
                 }
 
                 override fun onAdLoaded(p0: InterstitialAd) {
@@ -57,7 +58,7 @@ open class LoadAdmobByType {
             }
         )
     }
-    private fun loadNativeAd(admobConfigEnt: AdmobConfigEnt,loadSuccess:(ad:LoadAdmobEnt)->Unit,loadFail:()->Unit){
+    private fun loadNativeAd(admobConfigEnt: AdmobConfigEnt,loadSuccess:(ad:LoadAdmobEnt)->Unit,loadFail:(msg:String)->Unit){
         AdLoader.Builder(
             mClickApplication,
             admobConfigEnt.id_0809
@@ -67,13 +68,13 @@ open class LoadAdmobByType {
             .withAdListener(object : AdListener(){
                 override fun onAdFailedToLoad(p0: LoadAdError) {
                     super.onAdFailedToLoad(p0)
-                    loadFail.invoke()
+                    loadFail.invoke(p0.message)
                 }
             })
             .withNativeAdOptions(
                 NativeAdOptions.Builder()
                     .setAdChoicesPlacement(
-                        NativeAdOptions.ADCHOICES_TOP_RIGHT
+                        NativeAdOptions.ADCHOICES_TOP_LEFT
                     )
                     .build()
             )

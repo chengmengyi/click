@@ -3,8 +3,10 @@
   <component name="DesignSurface">
     <option name="filePathToZoomLevelMap">
       <map>
+        <entry key="app/src/main/res/drawable/bg_10b0fa_9633ff_8dp_solid.xml" value="0.2984375" />
         <entry key="app/src/main/res/drawable/bg_272731_12dp.xml" value="0.2601851851851852" />
         <entry key="app/src/main/res/drawable/bg_ffa402_26dp.xml" value="0.2601851851851852" />
+        <entry key="app/src/main/res/drawable/bg_ffffff_12dp.xml" value="0.2984375" />
         <entry key="app/src/main/res/drawable/ic_launcher_background.xml" value="0.2601851851851852" />
         <entry key="app/src/main/res/drawable/progress_connect_btn.xml" value="0.2601851851851852" />
         <entry key="app/src/main/res/drawable/progress_main.xml" value="0.2601851851851852" />
@@ -12,7 +14,9 @@
         <entry key="app/src/main/res/layout/activity_main.xml" value="0.25" />
         <entry key="app/src/main/res/layout/layout_agree.xml" value="0.23233695652173914" />
         <entry key="app/src/main/res/layout/layout_home.xml" value="0.25" />
+        <entry key="app/src/main/res/layout/layout_home_native_ad.xml" value="0.22871376811594202" />
         <entry key="app/src/main/res/layout/layout_result.xml" value="0.23233695652173914" />
+        <entry key="app/src/main/res/layout/layout_result_native_ad.xml" value="0.22871376811594202" />
         <entry key="app/src/main/res/layout/layout_server_item.xml" value="0.25" />
         <entry key="app/src/main/res/layout/layout_server_list.xml" value="0.25" />
         <entry key="app/src/main/res/layout/layout_set.xml" value="0.23233695652173914" />
